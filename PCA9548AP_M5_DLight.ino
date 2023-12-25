@@ -5,16 +5,25 @@
  * Based on: https://learn.adafruit.com/adafruit-pca9548-8-channel-stemma-qt-qwiic-i2c-multiplexer/arduino
  * Based on: https://playground.arduino.cc/Main/I2cScanner/
  */
+#include <M5_DLight.h>
 #include "Wire.h"
+
 #define PCA_ADDRESS 0x70
+
+M5_DLight sensor0;
+M5_DLight sensor1;
+M5_DLight sensor2;
+M5_DLight sensor3;
 unsigned long loopDelay = 5000;					// The maximum value of 4,294,967,295 allows for a delay of about 49.7 days.
 unsigned long lastLoop = 0;						// Holds the time when the most recent loop completed.
-unsigned long loopCount = 0;						// The maximum value of 4,294,967,295 allows for a delay of about 49.7 days.
+unsigned long loopCount = 0;
 const char * sketchName = "PCA9548AP_PortScanner";	// The name of this sketch.
 int startPort = 0x00;
 int endPort = 0x77;
+uint16_t lux;
 
-void pcaselect( uint8_t i ) 
+
+void pcaSelect( uint8_t i )
 {
   if( i > 7 )
     return;
@@ -31,7 +40,25 @@ void setup()
     delay( 1000 );
 
   Wire.begin();
-  Serial.println( "\nPCAScanner ready!" );
+  pcaSelect( 0 );
+  sensor0.begin();
+  // CONTINUOUSLY_H_RESOLUTION_MODE
+  // CONTINUOUSLY_H_RESOLUTION_MODE2
+  // CONTINUOUSLY_L_RESOLUTION_MODE
+  // ONE_TIME_H_RESOLUTION_MODE
+  // ONE_TIME_H_RESOLUTION_MODE2
+  // ONE_TIME_L_RESOLUTION_MODE
+  sensor0.setMode( CONTINUOUSLY_H_RESOLUTION_MODE );
+  pcaSelect( 1 );
+  sensor1.begin();
+  sensor1.setMode( CONTINUOUSLY_H_RESOLUTION_MODE );
+  pcaSelect( 2 );
+  sensor2.begin();
+  sensor2.setMode( CONTINUOUSLY_H_RESOLUTION_MODE );
+  pcaSelect( 3 );
+  sensor3.begin();
+  sensor3.setMode( CONTINUOUSLY_H_RESOLUTION_MODE );
+  Serial.println( "\nI2C scanner and lux sensor are ready!" );
 }
 
 
@@ -45,8 +72,11 @@ void loop()
     // Iterate through every port on the PCA9548AP.
     for( uint8_t port = 0; port < 8; port++ ) 
     {
-      pcaselect( port );
-      Serial.printf( "PCA Port #%d\n", port ); 
+      pcaSelect( port );
+      Serial.printf( "PCA Port #%d\n", port );
+
+      lux = sensor0.getLUX();
+      Serial.printf( "Port %d lux: %d\n", port, lux );
 
       // Iterate through every potentially valid I2C address.
       for( uint8_t addr = 0; addr <= 127; addr++ ) 
